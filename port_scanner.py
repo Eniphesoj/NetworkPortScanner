@@ -115,25 +115,82 @@ def scan_ports(host, start_port=1, end_port=1024, num_threads=100):  # scan a ra
     return sorted(open_ports, key=lambda x: x['port'])
 
 # function to display scan results in a formatted table
-def display_results(host, open_ports):
-    print(f"\n {Fore.GREEN}{'=' * 70}")
+def display_results(host, open_ports, vuln_db):
+    print(f"\n{Fore.GREEN}{'='*70}")
     print(f"SCAN RESULTS FOR {host}")
-    print(f"{'=' * 70}\n")
-
+    print(f"{'='*70}\n")
+    
     if not open_ports:
-        print(f"{Fore.YELLOW}No open ports found on {host}\n.")
+        print(f"{Fore.YELLOW}No open ports found.\n")
         return
-    print(f"{Fore.CYAN}{'PORT':<10} {'SERVICE':<20} {'BANNER'}")
-    print(f"{'-' * 70}")
-
+    
+    print(f"{Fore.CYAN}{'PORT':<10}{'SERVICE':<20}{'RISK':<15}{'BANNER'}")
+    print(f"{'-'*70}")
+    
+    critical_count = 0
+    high_count = 0
+    medium_count = 0
+    
     for port_info in open_ports:
         port = port_info['port']
         service = port_info['service']
-        banner = port_info['banner'][:40] if port_info['banner'] else "No banner"
+        banner = port_info['banner'][:30] if port_info['banner'] else "No banner"
+        
+        # Check for vulnerabilities
+        vuln_info = check_vulnerabilities(port, vuln_db)
+        
+        if vuln_info:
+            risk = vuln_info['risk']
+            
+            # Count by risk level
+            if risk == 'CRITICAL':
+                critical_count += 1
+                risk_color = Fore.RED
+            elif risk == 'HIGH':
+                high_count += 1
+                risk_color = Fore.RED
+            elif risk == 'MEDIUM':
+                medium_count += 1
+                risk_color = Fore.YELLOW
+            else:
+                risk_color = Fore.GREEN
+            
+            print(f"{Fore.GREEN}{port:<10}{service:<20}{risk_color}{risk:<15}{Fore.WHITE}{banner}")
+        else:
+            print(f"{Fore.GREEN}{port:<10}{service:<20}{Fore.WHITE}{'LOW':<15}{banner}")
+    
+    print(f"\n{Fore.GREEN}Total open ports: {len(open_ports)}")
+    
+    # Show vulnerability summary
+    if critical_count > 0 or high_count > 0 or medium_count > 0:
+        print(f"\n{Fore.RED} SECURITY WARNINGS:")
+        if critical_count > 0:
+            print(f"{Fore.RED} • {critical_count} CRITICAL risk port(s)")
+        if high_count > 0:
+            print(f"{Fore.RED} • {high_count} HIGH risk port(s)")
+        if medium_count > 0:
+            print(f"{Fore.YELLOW} • {medium_count} MEDIUM risk port(s)")
+    
+    print()
 
-        print(f"{Fore.GREEN}{port:<10}{service:<20}{Fore.WHITE}{banner}")
-
-    print(f"\n{Fore.GREEN}Total open ports: {len(open_ports)}\n")
+# function to load vulnerability database from JSON file
+def load_vulnerability_database():
+    try:
+        with open('vulns.json', 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"{Fore.YELLOW}Warning: vulns.json not found. Vulnerability checking disabled.{Style.RESET_ALL}")
+        return {}
+    except json.JSONDecodeError:
+        print(f"{Fore.YELLOW}Warning: vulns.json is invalid. Vulnerability checking disabled.{Style.RESET_ALL}")
+        return {}
+    
+# function to check for vulnerabilitys based on open ports and vulnerability database
+def check_vulnerabilities(port, vuln_db):
+    port_str = str(port)
+    if port_str in vuln_db:
+        return vuln_db[port_str]
+    return None
     
 # function main
 def main():
@@ -196,8 +253,11 @@ def main():
     end_time = datetime.now()
     duration = (end_time - start_time).total_seconds()
 
+    # load vulnerability database
+    vuln_db = load_vulnerability_database()
+
     # display results
-    display_results(host, open_ports)
+    display_results(host, open_ports, vuln_db)
 
     print(f"{Fore.CYAN}Scan completed in {duration:.2f} seconds. {Style.RESET_ALL}\n")
 

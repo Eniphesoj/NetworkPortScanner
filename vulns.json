@@ -1,0 +1,48 @@
+{ 
+  "_Description": "Vulnerability database for most commonly attacked network ports.",
+  "21": {
+    "service": "FTP",
+    "risk": "HIGH",
+    "vulns": [
+      "Anonymous login may be enabled",
+      "Unencrypted credential transmission",
+      "CVE-2015-3306: ProFTPd mod_copy exploit"
+    ]
+  },
+  "23": {
+    "service": "Telnet",
+    "risk": "CRITICAL",
+    "vulns": [
+      "Unencrypted protocol - credentials sent in plaintext",
+      "Should be replaced with SSH",
+      "CVE-2020-10188: Multiple telnet vulnerabilities"
+    ]
+  },
+  "80": {
+    "service": "HTTP",
+    "risk": "MEDIUM",
+    "vulns": [
+      "Unencrypted web traffic",
+      "Consider using HTTPS instead",
+      "Potential information disclosure"
+    ]
+  },
+  "445": {
+    "service": "SMB",
+    "risk": "HIGH",
+    "vulns": [
+      "CVE-2017-0144: EternalBlue (WannaCry exploit)",
+      "CVE-2020-0796: SMBGhost",
+      "Network file sharing exposed"
+    ]
+  },
+  "3389": {
+    "service": "RDP",
+    "risk": "HIGH",
+    "vulns": [
+      "CVE-2019-0708: BlueKeep vulnerability",
+      "Brute force attack target",
+      "Should use VPN or strong authentication"
+    ]
+  }
+}
