@@ -1,2 +1,2 @@
 # NetworkPortScanner
-Python network security scanner with port scanning and vulnerability detection.
+Python network security scanner with port scanning, vulnerability detection and risk assessment.
